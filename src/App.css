@@ -5,3 +5,144 @@
 .App {
   min-height: 100vh;
 }
+
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: #111;
+  color: white;
+}
+
+.nav-left {
+  display: flex;
+  gap: 16px;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 6px 10px;
+  transition: 0.2s ease;
+}
+
+.nav-btn:hover {
+  color: white;
+}
+
+.nav-btn.active {
+  color: white;
+  border-bottom: 2px solid white;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-username {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.logout-btn {
+  background: #e53935;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.content-area {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* YouTube Download Styling - Dark */
+
+.yt-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 60px 20px;
+  background: #0f0f0f;
+  min-height: 100%;
+}
+
+.yt-card {
+  width: 100%;
+  max-width: 600px;
+  background: #1a1a1a;
+  padding: 40px;
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  border: 1px solid #2a2a2a;
+}
+
+.yt-title {
+  margin-bottom: 30px;
+  font-size: 22px;
+  font-weight: 600;
+  color: white;
+}
+
+.yt-field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 22px;
+}
+
+.yt-field label {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #aaa;
+}
+
+.yt-field input {
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #121212;
+  color: white;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.yt-field input:focus {
+  outline: none;
+  border-color: #555;
+}
+
+.yt-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #2563eb, #4f46e5);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.yt-button:hover {
+  opacity: 0.9;
+}
+
+.yt-progress-placeholder {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #777;
+}

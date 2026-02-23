@@ -4,6 +4,8 @@ import './Auth.css';
 
 export default function Auth({ onLogin }) {
   const [mode, setMode] = useState('login');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,7 +19,7 @@ export default function Auth({ onLogin }) {
     try {
       const name = username.trim().toLowerCase();
       if (mode === 'create') {
-        await createUser(name, password, email.trim());
+        await createUser(name, password, email.trim(), firstName.trim(), lastName.trim());
         setError('');
         setMode('login');
         setPassword('');
@@ -25,7 +27,7 @@ export default function Auth({ onLogin }) {
       } else {
         const user = await findUser(name, password);
         if (!user) throw new Error('User not found or invalid password');
-        onLogin(user.username);
+        onLogin(user);
       }
     } catch (err) {
       try {
@@ -47,6 +49,24 @@ export default function Auth({ onLogin }) {
           <p className="auth-subtitle">Yale · Modern</p>
         </div>
         <form onSubmit={handleSubmit} className="auth-form">
+          {mode === 'create' && (
+            <>
+              <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </>
+          )}
           <input
             type="text"
             placeholder="Username"

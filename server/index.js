@@ -47,7 +47,7 @@ app.get('/api/status', async (req, res) => {
 
 app.post('/api/users', async (req, res) => {
   try {
-    const { username, password, email } = req.body;
+    const { username, password, email, firstName, lastName } = req.body;
     if (!username || !password)
       return res.status(400).json({ error: 'Username and password required' });
     const name = String(username).trim().toLowerCase();
@@ -58,6 +58,8 @@ app.post('/api/users', async (req, res) => {
       username: name,
       password: hashed,
       email: email ? String(email).trim().toLowerCase() : null,
+      firstName: firstName ? String(firstName).trim() : null,
+      lastName: lastName ? String(lastName).trim() : null,
       createdAt: new Date().toISOString(),
     });
     res.json({ ok: true });
@@ -76,7 +78,7 @@ app.post('/api/users/login', async (req, res) => {
     if (!user) return res.status(401).json({ error: 'User not found' });
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) return res.status(401).json({ error: 'Invalid password' });
-    res.json({ ok: true, username: name });
+    res.json({ ok: true, username: user.username, firstName: user.firstName, lastName: user.lastName });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -202,6 +204,96 @@ app.get('/api/messages', async (req, res) => {
     });
     res.json(msgs);
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/youtube/download', async (req, res) => {
+  try {
+    const { channelUrl, maxVideos = 10 } = req.body;
+    if (!channelUrl) {
+      return res.status(400).json({ error: 'Channel URL required' });
+    }
+
+    const API_KEY = process.env.YOUTUBE_API_KEY;
+    if (!API_KEY) {
+      return res.status(500).json({ error: 'YouTube API key not configured' });
+    }
+
+    // 1️⃣ Determine channelId from different URL formats
+    let channelId = null;
+
+    // Case 1: @handle format
+    const handleMatch = channelUrl.match(/@([^\/]+)/);
+    if (handleMatch) {
+      const handle = handleMatch[1];
+      const channelRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${handle}&key=${API_KEY}`
+      );
+      const channelData = await channelRes.json();
+      if (channelData.items && channelData.items.length > 0) {
+        channelId = channelData.items[0].snippet.channelId;
+      }
+    }
+
+    // Case 2: /channel/CHANNEL_ID
+    const channelIdMatch = channelUrl.match(/\/channel\/([^\/]+)/);
+    if (!channelId && channelIdMatch) {
+      channelId = channelIdMatch[1];
+    }
+
+    // Case 3: /user/username or /c/channelname
+    const legacyMatch = channelUrl.match(/\/(user|c)\/([^\/]+)/);
+    if (!channelId && legacyMatch) {
+      const legacyName = legacyMatch[2];
+      const channelRes = await fetch(
+        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${legacyName}&key=${API_KEY}`
+      );
+      const channelData = await channelRes.json();
+      if (channelData.items && channelData.items.length > 0) {
+        channelId = channelData.items[0].snippet.channelId;
+      }
+    }
+
+    if (!channelId) {
+      return res.status(404).json({ error: 'Could not resolve channel from URL' });
+    }
+
+    // 2️⃣ Get latest videos from channel
+    const videoRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${channelId}&part=snippet&type=video&order=date&maxResults=${Math.min(maxVideos, 50)}`
+    );
+    const videoData = await videoRes.json();
+
+    const videoIds = videoData.items.map(v => v.id.videoId).join(',');
+
+    // 4️⃣ Get video statistics + content details
+    const statsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?key=${API_KEY}&id=${videoIds}&part=snippet,statistics,contentDetails`
+    );
+    const statsData = await statsRes.json();
+
+    const videos = statsData.items.map(v => ({
+      title: v.snippet.title,
+      description: v.snippet.description,
+      release_date: v.snippet.publishedAt,
+      view_count: Number(v.statistics.viewCount || 0),
+      like_count: Number(v.statistics.likeCount || 0),
+      comment_count: Number(v.statistics.commentCount || 0),
+      duration: v.contentDetails.duration,
+      video_url: `https://www.youtube.com/watch?v=${v.id}`,
+      thumbnail: v.snippet.thumbnails.high?.url || null
+    }));
+
+    res.json({
+      channelUrl,
+      downloadedAt: new Date().toISOString(),
+      videoCount: videos.length,
+      videos
+    });
+
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
